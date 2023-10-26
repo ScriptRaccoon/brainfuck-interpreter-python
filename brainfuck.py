@@ -8,6 +8,7 @@ or
 python brainfuck.py example1.bf debug
 """
 
+from collections.abc import Callable
 import sys
 
 
@@ -45,8 +46,8 @@ class BrainfuckInterpreter:
         self.pos: int = 0
         self.tape: list[int] = [0]
         self.cell: int = 0
-        self.bracket_dict = self.generate_bracket_dict()
-        self.actions = self.generate_action_dict()
+        self.bracket_dict: dict[int, int] = self.generate_bracket_dict()
+        self.actions: dict[str, Callable[[], None]] = self.generate_action_dict()
 
     def increment(self) -> None:
         """Increments the current cell value (restricted to 1 byte)"""
@@ -114,7 +115,11 @@ class BrainfuckInterpreter:
         ascii_index = ord(ascii_char)
         self.tape[self.cell] = ascii_index
 
-    def generate_action_dict(self) -> dict:
+    def generate_action_dict(self) -> dict[str, Callable[[], None]]:
+        """
+        Generates the action dictionary, mapping each Brainfuck command
+        to a corresponding action to be executed while running the program
+        """
         return {
             "+": self.increment,
             "-": self.decrement,
