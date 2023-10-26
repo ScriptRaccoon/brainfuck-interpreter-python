@@ -26,6 +26,7 @@ class BrainfuckInterpreter:
         pos: current position of the program during interpretation
         tape: the array of integers on which the program operates
         cell: the index of the current cell on the tape
+        actions: a dictionary mapping each Brainfuck character to an action
     """
 
     ALLOWED_CHARS = list("+-><[].,")
@@ -33,7 +34,7 @@ class BrainfuckInterpreter:
 
     def __init__(self, program: str, debug: bool = False) -> None:
         """
-        Initializes the Brainfuck interpreter and generates the bracket dictionary
+        Initializes the Brainfuck interpreter
 
         Arguments:
             program: any Brainfuck program (as a string)
@@ -41,10 +42,11 @@ class BrainfuckInterpreter:
         """
         self.program = program
         self.debug = debug
-        self.bracket_dict = self.generate_bracket_dict()
         self.pos: int = 0
         self.tape: list[int] = [0]
         self.cell: int = 0
+        self.bracket_dict = self.generate_bracket_dict()
+        self.actions = self.generate_action_dict()
 
     def increment(self) -> None:
         """Increments the current cell value (restricted to 1 byte)"""
@@ -99,8 +101,8 @@ class BrainfuckInterpreter:
 
     def read(self) -> None:
         """
-        Reads one ascii character from standard input and
-        puts its ascii index on the current cell
+        Reads one ascii character from the standard input
+        and puts its ascii index on the current cell
         """
         ascii_char = ""
         valid = False
@@ -111,6 +113,18 @@ class BrainfuckInterpreter:
                 print("Error: Expected only one ascii character as input. Try again.")
         ascii_index = ord(ascii_char)
         self.tape[self.cell] = ascii_index
+
+    def generate_action_dict(self) -> dict:
+        return {
+            "+": self.increment,
+            "-": self.decrement,
+            ">": self.go_right,
+            "<": self.go_left,
+            "[": self.start_loop,
+            "]": self.finish_loop,
+            ".": self.print,
+            ",": self.read,
+        }
 
     def generate_bracket_dict(self) -> dict[int, int]:
         """
@@ -162,23 +176,8 @@ class BrainfuckInterpreter:
                 print("tape:", tape_with_pos)
                 print("char:", char)
 
-            if char == "+":
-                self.increment()
-            elif char == "-":
-                self.decrement()
-            elif char == ">":
-                self.go_right()
-            elif char == "<":
-                self.go_left()
-            elif char == "[":
-                self.start_loop()
-            elif char == "]":
-                self.finish_loop()
-            elif char == ".":
-                self.print()
-            elif char == ",":
-                self.read()
-
+            action = self.actions[char]
+            action()
             self.pos += 1
 
 
