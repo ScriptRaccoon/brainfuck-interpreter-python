@@ -30,7 +30,7 @@ class BrainfuckInterpreter:
         actions: a dictionary mapping each Brainfuck character to an action
     """
 
-    ALLOWED_CHARS: list[str] = list("+-><[].,")
+    ALLOWED_CHARACTERS: list[str] = list("+-><[].,")
     """List of allowed characters in a Brainfuck program, all others are just ignored."""
 
     def __init__(self, program: str, debug: bool = False) -> None:
@@ -62,7 +62,7 @@ class BrainfuckInterpreter:
             self.tape[self.cell] = 255
 
     def go_right(self) -> None:
-        """Go right on the tape"""
+        """Go right on the tape (and increase tape size if necessary)"""
         self.cell += 1
         if self.cell >= len(self.tape):
             self.tape.append(0)
@@ -132,10 +132,10 @@ class BrainfuckInterpreter:
 
     def generate_bracket_dict(self) -> dict[int, int]:
         """
-        Generates a dictionary of bracket positions for the brainfuck program.
+        Generates a dictionary of bracket positions for the Brainfuck program.
         When a bracket [ starts at position i and ends with ] at position j,
-        the dictionary has i -> j as well as j -> i. This facilitates jumping
-        between the bracket positions when running the interpreter.
+        the dictionary maps i to j and vice versa. This facilitates jumping
+        between the bracket positions when running the program.
 
         Returns:
             The bracket dictionary
@@ -144,26 +144,21 @@ class BrainfuckInterpreter:
             SyntaxError: When the brackets do not match up
         """
         bracket_dict: dict[int, int] = {}
-        opening_bracket_positions = []
+        stack = []
         for pos, char in enumerate(self.program):
             if char == "[":
-                opening_bracket_positions.append(pos)
+                stack.append(pos)
             elif char == "]":
-                if len(opening_bracket_positions) == 0:
+                if len(stack) == 0:
                     raise SyntaxError(f"] in position {pos} has no matching [")
-                opening_bracket = opening_bracket_positions.pop()
-                bracket_dict[opening_bracket] = pos
-                bracket_dict[pos] = opening_bracket
-        if len(opening_bracket_positions) > 0:
-            pos = opening_bracket_positions[0]
+                start = stack.pop()
+                bracket_dict[start] = pos
+                bracket_dict[pos] = start
+        if len(stack) > 0:
+            pos = stack[0]
             raise SyntaxError(f"[ in position {pos} has no matching ]")
 
         return bracket_dict
-
-    def print_program(self) -> None:
-        """Prints the program's source code"""
-        if self.debug:
-            print("program:", self.program)
 
     def print_status(self, char: str) -> None:
         """Prints the current tape, position and character
@@ -181,10 +176,11 @@ class BrainfuckInterpreter:
 
     def run(self) -> None:
         """Runs the Brainfuck interpreter"""
-        self.print_program()
+        if self.debug:
+            print("program:", self.program)
         while self.pos < len(self.program):
             char: str = self.program[self.pos]
-            if char in BrainfuckInterpreter.ALLOWED_CHARS:
+            if char in BrainfuckInterpreter.ALLOWED_CHARACTERS:
                 self.print_status(char)
                 action = self.actions[char]
                 action()
@@ -193,8 +189,8 @@ class BrainfuckInterpreter:
 
 def main() -> None:
     """
-    Reads the file passed as an argument, creates a brainfuck
-    interpreter for it and executes it.
+    Reads the file passed as an argument, creates a
+    Brainfuck interpreter for it and executes it.
 
     Raises:
         ValueError: when no file is present
