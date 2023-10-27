@@ -30,7 +30,7 @@ class BrainfuckInterpreter:
         actions: a dictionary mapping each Brainfuck character to an action
     """
 
-    ALLOWED_CHARS = list("+-><[].,")
+    ALLOWED_CHARS: list[str] = list("+-><[].,")
     """List of allowed characters in a Brainfuck program, all others are just ignored."""
 
     def __init__(self, program: str, debug: bool = False) -> None:
@@ -41,8 +41,8 @@ class BrainfuckInterpreter:
             program: any Brainfuck program (as a string)
             debug (optional): if True, interpreter displays commands and tape in each step
         """
-        self.program = program
-        self.debug = debug
+        self.program: str = program
+        self.debug: bool = debug
         self.pos: int = 0
         self.tape: list[int] = [0]
         self.cell: int = 0
@@ -75,21 +75,17 @@ class BrainfuckInterpreter:
 
     def start_loop(self) -> None:
         """Start the loop: either skip it (when the call value is 0) or enter it"""
+        if self.debug:
+            print("skip loop" if self.tape[self.cell] == 0 else "enter loop")
         if self.tape[self.cell] == 0:
-            if self.debug:
-                print("skip loop")
             self.pos = self.bracket_dict[self.pos]
-        elif self.debug:
-            print("enter loop")
 
     def finish_loop(self) -> None:
         """Finish the loop: either finish it (when the cell value is 0) or restart it over"""
+        if self.debug:
+            print("finish loop" if self.tape[self.cell] == 0 else "finish loop")
         if self.tape[self.cell] != 0:
-            if self.debug:
-                print("restart loop")
             self.pos = self.bracket_dict[self.pos]
-        elif self.debug:
-            print("finish loop")
 
     def print(self) -> None:
         """Prints the current cell value as an ascii character"""
@@ -100,18 +96,21 @@ class BrainfuckInterpreter:
         else:
             print(ascii_char, end="")
 
+    def _get_user_input(self) -> str:
+        """Reads one ascii character from the standard input and returns it"""
+        while True:
+            ascii_char = input()
+            valid = len(ascii_char) == 1 and 0 <= ord(ascii_char) <= 255
+            if valid:
+                return ascii_char
+            print("Error: Expected only one ascii character as input. Try again")
+
     def read(self) -> None:
         """
         Reads one ascii character from the standard input
         and puts its ascii index on the current cell
         """
-        ascii_char = ""
-        valid = False
-        while not valid:
-            ascii_char = input()
-            valid = len(ascii_char) == 1 and 0 <= ord(ascii_char) <= 255
-            if not valid:
-                print("Error: Expected only one ascii character as input. Try again.")
+        ascii_char = self._get_user_input()
         ascii_index = ord(ascii_char)
         self.tape[self.cell] = ascii_index
 
@@ -161,28 +160,34 @@ class BrainfuckInterpreter:
 
         return bracket_dict
 
-    def run(self) -> None:
-        """Runs the Brainfuck interpreter"""
+    def print_program(self) -> None:
+        """Prints the program's source code"""
         if self.debug:
             print("program:", self.program)
 
+    def print_status(self, char: str) -> None:
+        """Prints the current tape, position and character
+
+        Arguments:
+            char: the current character
+        """
+        if self.debug:
+            tape_str = map(str, self.tape)
+            tape_with_pos = ", ".join(
+                val if i != self.cell else f"|{val}|" for i, val in enumerate(tape_str)
+            )
+            print("tape:", tape_with_pos)
+            print("char:", char)
+
+    def run(self) -> None:
+        """Runs the Brainfuck interpreter"""
+        self.print_program()
         while self.pos < len(self.program):
             char: str = self.program[self.pos]
-
-            if not char in BrainfuckInterpreter.ALLOWED_CHARS:
-                self.pos += 1
-                continue
-
-            if self.debug:
-                tape_with_pos = ", ".join(
-                    str(val) if i != self.cell else f"|{str(val)}|"
-                    for i, val in enumerate(self.tape)
-                )
-                print("tape:", tape_with_pos)
-                print("char:", char)
-
-            action = self.actions[char]
-            action()
+            if char in BrainfuckInterpreter.ALLOWED_CHARS:
+                self.print_status(char)
+                action = self.actions[char]
+                action()
             self.pos += 1
 
 
@@ -190,6 +195,9 @@ def main() -> None:
     """
     Reads the file passed as an argument, creates a brainfuck
     interpreter for it and executes it.
+
+    Raises:
+        ValueError: when no file is present
     """
     args = sys.argv
     if len(args) == 1:
