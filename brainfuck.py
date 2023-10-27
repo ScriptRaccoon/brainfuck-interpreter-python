@@ -83,7 +83,7 @@ class BrainfuckInterpreter:
     def finish_loop(self) -> None:
         """Finish the loop: either finish it (when the cell value is 0) or restart it over"""
         if self.debug:
-            print("finish loop" if self.tape[self.cell] == 0 else "finish loop")
+            print("finish loop" if self.tape[self.cell] == 0 else "reenter loop")
         if self.tape[self.cell] != 0:
             self.pos = self.bracket_dict[self.pos]
 
@@ -202,7 +202,7 @@ def main() -> None:
     args = sys.argv
     if len(args) == 1:
         raise ValueError("Missing file path")
-    file_path = sys.argv[1]
+    file_path = args[1]
     debug = len(args) == 3 and args[2] == "debug"
     with open(file_path, "r", encoding="utf8") as file:
         program = file.read()
