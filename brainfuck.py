@@ -1,11 +1,16 @@
 """
-Brainfuck interpreter written in Python
-https://en.wikipedia.org/wiki/Brainfuck
+Brainfuck interpreter written in Python. See Wikipedia
+https://en.wikipedia.org/wiki/Brainfuck for more information
+about this esoteric programming language.
 
-Usage:
-python brainfuck.py example1.bf
-or
-python brainfuck.py example1.bf debug
+How to use it:
+
+python brainfuck.py example.bf
+
+How to add debugging:
+
+python brainfuck.py example.bf --debug
+python brainfuck.py example.bf -d
 """
 
 from collections.abc import Callable
@@ -199,7 +204,7 @@ def main() -> None:
     if len(args) == 1:
         raise ValueError("Missing file path")
     file_path = args[1]
-    debug = len(args) == 3 and args[2] == "debug"
+    debug = len(args) == 3 and args[2] in ["--debug", "-d"]
     with open(file_path, "r", encoding="utf8") as file:
         program = file.read()
         interpreter = BrainfuckInterpreter(program, debug)
